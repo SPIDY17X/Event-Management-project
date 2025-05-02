@@ -109,7 +109,7 @@ export const mockEvents: Record<string, EventDetails> = { // Export mockEvents
     registeredAttendees: 300, // Mark as full since it's past
   },
 
-  // --- Events from May 2025 onwards (Original Attendee Counts) ---
+  // --- Events from May 2025 onwards (Attendee Counts will be synced from registrations) ---
   'Melody Night': {
     id: 'melody-night-2025',
     name: 'Melody Night',
@@ -117,7 +117,7 @@ export const mockEvents: Record<string, EventDetails> = { // Export mockEvents
     dateTime: '2025-05-10T18:30:00Z', // Updated Date to May 10
     location: 'University Amphitheatre',
     capacity: 1000,
-    registeredAttendees: 650,
+    registeredAttendees: 0, // Initial count, will be updated below
   },
   'Alumni Meet': {
     id: 'alumni-meet-2025',
@@ -126,7 +126,7 @@ export const mockEvents: Record<string, EventDetails> = { // Export mockEvents
     dateTime: '2025-06-15T17:00:00Z', // Updated date
     location: 'University Guest House Lawns',
     capacity: 400,
-    registeredAttendees: 150,
+    registeredAttendees: 0, // Initial count, will be updated below
   },
   'Career Fair': {
     id: 'career-fair-2025',
@@ -135,7 +135,7 @@ export const mockEvents: Record<string, EventDetails> = { // Export mockEvents
     dateTime: '2025-07-10T10:00:00Z', // Updated date
     location: 'Multipurpose Hall, Sports Complex',
     capacity: 2000, // Larger capacity
-    registeredAttendees: 900,
+    registeredAttendees: 0, // Initial count, will be updated below
   },
   'Innovation Expo': {
     id: 'innovation-expo-2025',
@@ -144,7 +144,7 @@ export const mockEvents: Record<string, EventDetails> = { // Export mockEvents
     dateTime: '2025-08-28T11:00:00Z', // Updated date
     location: 'Convention Hall',
     capacity: 600,
-    registeredAttendees: 320,
+    registeredAttendees: 0, // Initial count, will be updated below
   },
   THOMDOS: {
     id: 'thomdos-2025',
@@ -153,7 +153,7 @@ export const mockEvents: Record<string, EventDetails> = { // Export mockEvents
     dateTime: '2025-09-12T10:00:00Z', // Updated date (Start of festival)
     location: 'North Campus Grounds',
     capacity: 500,
-    registeredAttendees: 2, // Updated count based on pre-registration below
+    registeredAttendees: 0, // Initial count, will be updated below
   },
   ROBOMAP: {
     id: 'robomap-2025',
@@ -162,7 +162,7 @@ export const mockEvents: Record<string, EventDetails> = { // Export mockEvents
     dateTime: '2025-10-08T09:30:00Z', // Updated date
     location: 'Engineering Department Labs',
     capacity: 100,
-    registeredAttendees: 98, // Close to capacity
+    registeredAttendees: 0, // Initial count, will be updated below
   },
   COSMIC: {
     id: 'cosmic-2025',
@@ -171,7 +171,7 @@ export const mockEvents: Record<string, EventDetails> = { // Export mockEvents
     dateTime: '2025-11-15T18:00:00Z', // Updated date
     location: 'Physics Department Auditorium',
     capacity: 150,
-    registeredAttendees: 75,
+    registeredAttendees: 0, // Initial count, will be updated below
   },
   BITBOTS: {
     id: 'bitbots-2025',
@@ -180,7 +180,7 @@ export const mockEvents: Record<string, EventDetails> = { // Export mockEvents
     dateTime: '2025-12-05T11:00:00Z', // Updated date
     location: 'Computer Science Department Hub',
     capacity: 200,
-    registeredAttendees: 200, // At capacity
+    registeredAttendees: 0, // Initial count, will be updated below
   },
 };
 
@@ -193,18 +193,18 @@ const normalizePhoneNumber = (phone: string): string => {
     return phone.replace(/[\s-()]/g, '');
 }
 
-// Generate a random 10-digit phone number string
+// Generate a random 10-digit phone number string prefixed with +91
 const generateRandomPhone = (): string => {
-    let phone = '';
+    let phoneDigits = '';
     for (let i = 0; i < 10; i++) {
-        phone += Math.floor(Math.random() * 10);
+        phoneDigits += Math.floor(Math.random() * 10);
     }
-    return phone;
+    return `+91${phoneDigits}`;
 };
 
 // Sample realistic first names and last names
-const firstNames = ["Aarav", "Vivaan", "Aditya", "Vihaan", "Arjun", "Sai", "Reyansh", "Ayaan", "Krishna", "Ishaan", "Saanvi", "Angel", "Pari", "Ananya", "Diya", "Aadhya", "Fatima", "Myra", "Gauri", "Anika"];
-const lastNames = ["Sharma", "Verma", "Gupta", "Singh", "Kumar", "Patel", "Shah", "Khan", "Ali", "Das", "Reddy", "Joshi", "Mehta", "Desai", "Agarwal"];
+const firstNames = ["Aarav", "Vivaan", "Aditya", "Vihaan", "Arjun", "Sai", "Reyansh", "Ayaan", "Krishna", "Ishaan", "Saanvi", "Angel", "Pari", "Ananya", "Diya", "Aadhya", "Fatima", "Myra", "Gauri", "Anika", "Rohan", "Vikram", "Aryan", "Kabir", "Advik", "Aisha", "Zara", "Navya", "Siya", "Ishita"];
+const lastNames = ["Sharma", "Verma", "Gupta", "Singh", "Kumar", "Patel", "Shah", "Khan", "Ali", "Das", "Reddy", "Joshi", "Mehta", "Desai", "Agarwal", "Malhotra", "Chopra", "Nair", "Menon", "Iyer"];
 
 // Generate a random realistic name
 const generateRandomName = (): string => {
@@ -214,9 +214,9 @@ const generateRandomName = (): string => {
 }
 
 
-// Initialize registration sets and pre-populate for past events
+// Initialize registration arrays and pre-populate for past events first
 Object.values(mockEvents).forEach(event => {
-    registrations[event.id] = []; // Initialize as array
+    registrations[event.id] = []; // Initialize as empty array first
     // Pre-populate registrations for past events to match the capacity
     if (new Date(event.dateTime) < new Date('2025-05-01T00:00:00Z')) {
         const usedEmails = new Set<string>();
@@ -236,7 +236,7 @@ Object.values(mockEvents).forEach(event => {
 
              // Ensure unique phone number
             do {
-                phone = `+91${generateRandomPhone()}`;
+                phone = generateRandomPhone();
             } while (usedPhones.has(phone));
             usedPhones.add(phone);
 
@@ -248,48 +248,28 @@ Object.values(mockEvents).forEach(event => {
             });
         }
          // Ensure the registeredAttendees count matches capacity for past events
-         mockEvents[event.name] = { ...event, registeredAttendees: event.capacity };
-
-    } else {
-        // For future events, ensure the attendee count is correctly initialized if needed
-         mockEvents[event.name] = { ...event, registeredAttendees: registrations[event.id]?.length || 0 };
+         // No need to update mockEvents here, it's already set at capacity during declaration
     }
 });
 
-// Add some specific pre-registered details for testing upcoming events with updated format
+// Add some specific pre-registered details for testing upcoming events
 registrations['thomdos-2025'].push({ name: 'Priya Singh', email: 'priya.singh@gmail.com', phoneNumber: '+919876543210' });
 registrations['thomdos-2025'].push({ name: 'Rahul Kumar', email: 'rahul.kumar@gmail.com', phoneNumber: '+911234567890' });
-// Update attendee count for THOMDOS based on pre-registrations
-mockEvents['THOMDOS'].registeredAttendees = registrations['thomdos-2025'].length; // Use length for array
+registrations['robomap-2025'].push({ name: 'Aisha Khan', email: 'aisha.k@gmail.com', phoneNumber: '+919988776655' });
+registrations['robomap-2025'].push({ name: 'Vikram Desai', email: 'v.desai@gmail.com', phoneNumber: '+919123451234' });
+registrations['career-fair-2025'].push({ name: 'Ananya Sharma', email: 'ananya.sh@gmail.com', phoneNumber: '+919810098100' });
 
-// Pre-populate BITBOTS to capacity with realistic data
-if (registrations['bitbots-2025'].length < mockEvents['BITBOTS'].capacity) {
-    const usedEmailsBitbots = new Set(registrations['bitbots-2025'].map(r => r.email));
-    const usedPhonesBitbots = new Set(registrations['bitbots-2025'].map(r => r.phoneNumber));
-    const needed = mockEvents['BITBOTS'].capacity - registrations['bitbots-2025'].length;
+// Sync attendee counts for *all* events based on the *current* state of the registrations object
+Object.keys(mockEvents).forEach(eventKey => {
+  const event = mockEvents[eventKey];
+  const currentRegistrations = registrations[event.id]?.length || 0;
+  // Only update if the count differs (important for past events already set at capacity)
+  if (event.registeredAttendees !== currentRegistrations) {
+     mockEvents[eventKey] = { ...event, registeredAttendees: currentRegistrations };
+     console.log(`Synced attendee count for ${event.name} to ${currentRegistrations}`);
+  }
+});
 
-    for (let i = 0; i < needed; i++) {
-         let name = generateRandomName();
-         let email: string;
-         let phone: string;
-
-         // Ensure unique email
-         do {
-             const emailPrefix = name.toLowerCase().replace(/\s+/g, '.') + Math.floor(Math.random() * 100);
-             email = `${emailPrefix}@gmail.com`;
-         } while (usedEmailsBitbots.has(email));
-         usedEmailsBitbots.add(email);
-
-         // Ensure unique phone number
-         do {
-             phone = `+91${generateRandomPhone()}`;
-         } while (usedPhonesBitbots.has(phone));
-         usedPhonesBitbots.add(phone);
-
-        registrations['bitbots-2025'].push({ name, email, phoneNumber: phone });
-    }
-     mockEvents['BITBOTS'].registeredAttendees = mockEvents['BITBOTS'].capacity;
-}
 
 // --- Mock API Functions ---
 
@@ -302,10 +282,13 @@ export async function getEventDetails(eventName: string): Promise<EventDetails> 
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       // Find event case-insensitively or handle names with spaces correctly
-      const event = mockEvents[eventName] || Object.values(mockEvents).find(e => e.name === eventName);
+      const eventKey = Object.keys(mockEvents).find(key => mockEvents[key].name === eventName);
+      const event = eventKey ? mockEvents[eventKey] : undefined;
+
       if (event) {
-        // Return a copy to prevent direct modification of the mock store
-        resolve({ ...event });
+        // *** IMPORTANT: Return a copy with the SYNCHRONIZED count ***
+        const synchronizedCount = registrations[event.id]?.length || 0;
+        resolve({ ...event, registeredAttendees: synchronizedCount });
       } else {
         reject(new Error(`Event "${eventName}" not found.`));
       }
@@ -330,7 +313,9 @@ export async function registerForEvent(
    return new Promise((resolve, reject) => {
       setTimeout(() => {
         // Find event case-insensitively or handle names with spaces correctly
-        const event = mockEvents[eventName] || Object.values(mockEvents).find(e => e.name === eventName);
+        const eventKey = Object.keys(mockEvents).find(key => mockEvents[key].name === eventName);
+        const event = eventKey ? mockEvents[eventKey] : undefined;
+
 
         if (!event) {
           console.error(`Attempted to register for non-existent event: ${eventName}`);
@@ -348,12 +333,12 @@ export async function registerForEvent(
 
         const eventId = event.id;
         if (!registrations[eventId]) {
-            registrations[eventId] = []; // Initialize if not present
+            registrations[eventId] = []; // Initialize if not present (should not happen after init)
         }
         const eventRegistrations = registrations[eventId];
 
-        // Check for capacity (using the source data)
-        if (event.registeredAttendees >= event.capacity) {
+        // Check for capacity (using the *current* length of the registrations array)
+        if (eventRegistrations.length >= event.capacity) {
           console.log(`Registration failed for ${userName} (${userEmail}/${userPhoneNumber}) to ${eventName}: Event full.`);
           return resolve(false);
         }
@@ -383,15 +368,15 @@ export async function registerForEvent(
         eventRegistrations.push({ name: normalizedName, email: userEmail, phoneNumber: userPhoneNumber });
 
         // Safely update the event count in the mock store
-        const eventKey = Object.keys(mockEvents).find(key => mockEvents[key].id === eventId);
         if (eventKey) {
-          // IMPORTANT: Create a new object reference for the update to ensure React detects changes if necessary
-          const updatedEvent = { ...mockEvents[eventKey], registeredAttendees: mockEvents[eventKey].registeredAttendees + 1 };
+          // *** IMPORTANT: Update the mockEvents count to reflect the new registration ***
+          const updatedEvent = { ...mockEvents[eventKey], registeredAttendees: eventRegistrations.length }; // Update count from registrations array length
           mockEvents[eventKey] = updatedEvent; // Update using the original key
           console.log(`Successfully registered ${normalizedName} (${userEmail}/${userPhoneNumber}) for ${eventName}. New count: ${updatedEvent.registeredAttendees}`);
           resolve(true);
         } else {
-          console.error(`Could not find original key for event ID: ${eventId}`);
+          // This case should ideally not happen if event was found initially
+          console.error(`Could not find original key for event ID: ${eventId} during update.`);
           // Rollback registration add if needed?
           registrations[eventId] = eventRegistrations.filter(reg => !(reg.name === normalizedName && reg.email === userEmail && reg.phoneNumber === userPhoneNumber)); // Attempt rollback
           resolve(false);

@@ -19,6 +19,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"; // Import ScrollArea
 
 // Expanded events list with updated dates for June-December 2025
 // Added 'isPast' flag for events before May 2025
+// Initial 'registeredAttendees' might not reflect the true count; `getEventDetails` will fetch the correct count.
 const eventsList = [
   // Events before May 2025 (Marked as past)
   { name: 'LitVerse', shortDescription: 'Literature Festival', icon: <BookOpen className="w-8 h-8" />, date: 'Jan 15-16, 2025', location: 'Arts Faculty Hall', isPast: true },
@@ -47,7 +48,8 @@ export default function Home() {
   const { toast } = useToast(); // Initialize toast
 
   const handleRegisterClick = async (eventName: string, isPast: boolean) => {
-    // Check if the event is marked as past based on the list
+    // Check if the event is marked as past based on the list *first*
+    // This provides immediate feedback without needing an API call for past events.
     if (isPast) {
       toast({
         title: "Registration Closed",
@@ -62,20 +64,15 @@ export default function Home() {
     setIsModalOpen(true); // Open modal immediately to show loading state
     setSelectedEventDetails(null); // Clear previous details while loading new ones
     try {
+      // Fetch the *latest* event details, including the accurate attendee count
       const details = await getEventDetails(eventName);
-      // Double-check the date from fetched details (more reliable)
-      const eventDate = new Date(details.dateTime);
-      const cutoffDate = new Date('2025-05-01T00:00:00Z'); // May 1st, 2025
-      if (eventDate < cutoffDate) {
-          toast({
-              title: "Registration Closed",
-              description: `Registration for ${eventName} has ended.`,
-              variant: "destructive",
-          });
-          setIsModalOpen(false); // Close modal if date check fails after fetch
-          return;
-      }
-      setSelectedEventDetails(details);
+
+      // The getEventDetails and registerForEvent functions now handle past event logic,
+      // so we don't need an explicit date check here anymore.
+      // We rely on the fetched details being accurate.
+
+      setSelectedEventDetails(details); // Set the fetched details (including correct count)
+
     } catch (error) {
       console.error("Failed to fetch event details:", error);
       toast({
@@ -99,27 +96,35 @@ export default function Home() {
 
   // Effect to update details if already open (e.g., after registration)
   useEffect(() => {
-    // Only refresh if modal is open, details exist, and we are *not* currently loading
-    if (isModalOpen && selectedEventDetails?.name && !isLoadingDetails) {
-      const refreshDetails = async () => {
-        // No need to set loading true here if we only refresh *after* initial load
-        try {
-            const updatedDetails = await getEventDetails(selectedEventDetails.name);
-            // Only update if the modal is still open for the same event
-            if (isModalOpen && selectedEventDetails && updatedDetails.name === selectedEventDetails.name) {
-                setSelectedEventDetails(updatedDetails);
+    let isMounted = true; // Flag to prevent state updates if component unmounts during async operation
+
+    const refreshDetails = async () => {
+        // Only refresh if modal is open, details exist, and we are *not* currently loading
+        if (isModalOpen && selectedEventDetails?.name && !isLoadingDetails) {
+            // No need to set loading true here if we only refresh *after* initial load
+            try {
+                const updatedDetails = await getEventDetails(selectedEventDetails.name);
+                // Only update if the modal is still open for the same event and component is mounted
+                if (isMounted && isModalOpen && selectedEventDetails && updatedDetails.name === selectedEventDetails.name) {
+                    setSelectedEventDetails(updatedDetails);
+                }
+            } catch (error) {
+                console.error("Failed to refresh event details:", error);
+                 toast({ // Add toast on refresh error
+                     title: "Refresh Error",
+                     description: "Could not refresh event details.",
+                     variant: "destructive",
+                  });
             }
-        } catch (error) {
-            console.error("Failed to refresh event details:", error);
-             toast({ // Add toast on refresh error
-                 title: "Refresh Error",
-                 description: "Could not refresh event details.",
-                 variant: "destructive",
-              });
         }
-      };
-       refreshDetails();
-    }
+    };
+
+    refreshDetails();
+
+    // Cleanup function to set the mounted flag to false when the component unmounts
+    return () => {
+        isMounted = false;
+    };
     // Add selectedEventDetails.registeredAttendees to dependencies to trigger refresh after registration success
   }, [isModalOpen, selectedEventDetails?.name, selectedEventDetails?.registeredAttendees, isLoadingDetails, toast]);
 
